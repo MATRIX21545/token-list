@@ -1,0 +1,22 @@
+{
+  "name": "USDT Token Lista BSC",
+  "timestamp": "2025-12-28T00:00:00+00:00",
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "tags": {},
+  "logoURI": "https://cryptologos.cc/logos/tether-usdt-logo.png?v=029",
+  "keywords": ["BSC", "USDT", "Tether"],
+  "tokens": [
+    {
+      "chainId": 56,
+      "address": "0xd0520c07aF03FdEE0F95099Eb362a1Fe37c0Ff31",
+      "name": "Tether USD",
+      "symbol": "USDT",
+      "decimals": 18,
+      "logoURI": "https://cryptologos.cc/logos/tether-usdt-logo.png?v=029"
+    }
+  ]
+}
