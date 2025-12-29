@@ -1,109 +1,74 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>Moja dApp BEP-20 z wyszukiwarką</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .token { display: flex; align-items: center; margin-bottom: 10px; }
-    .token img { width: 40px; height: 40px; margin-right: 10px; }
-    #search { margin-bottom: 20px; padding: 5px; width: 300px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Moja dApp BEP-20</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #tokenList { margin-top: 20px; }
+        .token { display: flex; align-items: center; margin-bottom: 10px; }
+        .token img { width: 32px; height: 32px; margin-right: 10px; }
+    </style>
 </head>
 <body>
-  <h1>Moja dApp BEP-20</h1>
-  <button id="connectWallet">Połącz MetaMask</button>
-  <p id="walletAddress"></p>
+    <h1>Moja dApp BEP-20</h1>
+    <button id="connectButton">Połącz MetaMask</button>
+    <input type="text" id="searchInput" placeholder="Szukaj tokena..." />
+    <div id="tokenList"></div>
 
-  <input type="text" id="search" placeholder="Szukaj tokena po nazwie lub symbolu...">
-  <div id="tokenList"></div>
+    <script>
+        const connectButton = document.getElementById("connectButton");
+        const searchInput = document.getElementById("searchInput");
+        const tokenListDiv = document.getElementById("tokenList");
 
-  <script>
-    const tokenListUrl = "https://matrix21545.github.io/token-list/tokenlist.json";
-    let provider, signer, userAddress;
-    let allTokens = [];
+        const tokenListUrl = "https://matrix21545.github.io/token-list/tokenlist.json"; //
+        let tokens = [];
 
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          provider = new ethers.BrowserProvider(window.ethereum);
-          signer = await provider.getSigner();
-          userAddress = await signer.getAddress();
-          document.getElementById("walletAddress").textContent = "Adres portfela: " + userAddress;
-          loadTokens();
-        } catch (err) {
-          console.error("Błąd przy łączeniu MetaMask:", err);
-        }
-      } else {
-        alert("Zainstaluj MetaMask!");
-      }
-    }
-
-    async function loadTokens() {
-      const response = await fetch(tokenListUrl);
-      const data = await response.json();
-      allTokens = data.tokens;
-      displayTokens(allTokens);
-    }
-
-    async function getBalance(token) {
-      try {
-        const contract = new ethers.Contract(
-          token.address,
-          ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)"],
-          provider
-        );
-        const rawBalance = await contract.balanceOf(userAddress);
-        const decimals = await contract.decimals();
-        return Number(rawBalance) / Math.pow(10, decimals);
-      } catch (err) {
-        return 0;
-      }
-    }
-
-    async function displayTokens(tokens) {
-      const container = document.getElementById("tokenList");
-      container.innerHTML = "";
-      for (let token of tokens) {
-        const div = document.createElement("div");
-        div.className = "token";
-
-        const img = document.createElement("img");
-        img.src = token.logoURI;
-        img.alt = token.symbol;
-
-        const span = document.createElement("span");
-        span.textContent = ${token.name} (${token.symbol});
-
-        const balanceSpan = document.createElement("span");
-        balanceSpan.style.marginLeft = "10px";
-        balanceSpan.textContent = "Saldo: ...";
-
-        div.appendChild(img);
-        div.appendChild(span);
-        div.appendChild(balanceSpan);
-        container.appendChild(div);
-
-        // Pobranie salda tokena asynchronicznie
-        getBalance(token).then(balance => {
-          balanceSpan.textContent = Saldo: ${balance};
+        connectButton.addEventListener("click", async () => {
+            if (window.ethereum) {
+                try {
+                    const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+                    console.log("Połączono z kontem:", accounts[0]);
+                    loadTokens();
+                } catch (error) {
+                    console.error(error);
+                    alert("Błąd połączenia z MetaMask");
+                }
+            } else {
+                alert("MetaMask nie wykryty! Użyj Chrome/Brave/Edge z MetaMask.");
+            }
         });
-      }
-    }
 
-    // Obsługa wyszukiwania
-    document.getElementById("search").addEventListener("input", (e) => {
-      const query = e.target.value.toLowerCase();
-      const filtered = allTokens.filter(t => 
-        t.name.toLowerCase().includes(query) || t.symbol.toLowerCase().includes(query)
-      );
-      displayTokens(filtered);
-    });
+        async function loadTokens() {
+            try {
+                const response = await fetch(tokenListUrl);
+                const data = await response.json();
+                tokens = data.tokens; // zakładam, że tokeny są w polu "tokens"
+                displayTokens(tokens);
+            } catch (error) {
+                console.error("Błąd wczytywania tokenów:", error);
+            }
+        }
 
-    document.getElementById("connectWallet").addEventListener("click", connectWallet);
-  </script>
+        function displayTokens(list) {
+            tokenListDiv.innerHTML = "";
+            list.forEach(token => {
+                const div = document.createElement("div");
+                div.className = "token";
+                div.innerHTML = `
+                    <img src="${token.logoURI}" alt="${token.symbol}" />
+                    <span>${token.name} (${token.symbol})</span>
+                `;
+                tokenListDiv.appendChild(div);
+            });
+        }
+
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.toLowerCase();
+            const filtered = tokens.filter(t => t.name.toLowerCase().includes(query) || t.symbol.toLowerCase().includes(query));
+            displayTokens(filtered);
+        });
+    </script>
 </body>
 </html>
 
